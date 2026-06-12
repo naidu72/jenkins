@@ -16,6 +16,8 @@ spec:
         app: jenkins
     spec:
       serviceAccountName: jenkins
+      imagePullSecrets:
+        - name: ghcr-pull-secret 
 
       # Required: Jenkins home dir needs to be writable by uid 1000
       securityContext:
