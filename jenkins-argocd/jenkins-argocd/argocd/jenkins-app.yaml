@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: argocd                  # ArgoCD lives in argocd namespace on your hub (WSL2/sourceone)
+  labels:
+    app.kubernetes.io/name: jenkins
+    managed-by: argocd
+  # Finalizer ensures ArgoCD cleans up resources when App is deleted
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/naidu72/pi-k8s.git    # your existing GitOps repo
+    targetRevision: HEAD
+    path: apps/jenkins/base                            # folder where you'll push these manifests
+
+  destination:
+    server: https://kubernetes.default.svc             # DFW Pi k3s cluster
+    # OR use the cluster name if registered:
+    # name: dfw-pi
+    namespace: jenkins
+
+  syncPolicy:
+    automated:
+      prune: true          # delete resources removed from Git
+      selfHeal: true       # revert manual kubectl changes
+    syncOptions:
+      - CreateNamespace=true          # creates jenkins namespace if missing
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+
+  # Health checks - ArgoCD will report Healthy only when pod is Running
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data                       # ignore cert-manager managed secret data churn
