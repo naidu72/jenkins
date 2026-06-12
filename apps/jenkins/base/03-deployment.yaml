@@ -35,7 +35,7 @@ spec:
 
       containers:
         - name: jenkins
-          image: jenkins/jenkins:lts-jdk17   # LTS tag, JDK17 baked in
+          image: ghcr.io/naidu72/jenkins:lts   # LTS tag, JDK17 baked in
           ports:
             - name: http
               containerPort: 8080

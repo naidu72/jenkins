@@ -14,12 +14,12 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/naidu72/pi-k8s.git    # your existing GitOps repo
+    repoURL: https://github.com/naidu72/jenkins.git    # your existing GitOps repo
     targetRevision: HEAD
     path: apps/jenkins/base                            # folder where you'll push these manifests
 
   destination:
-    server: https://kubernetes.default.svc             # DFW Pi k3s cluster
+    server: https://192.168.0.151:6443            # DFW Pi k3s cluster
     # OR use the cluster name if registered:
     # name: dfw-pi
     namespace: jenkins
