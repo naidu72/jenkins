@@ -1,0 +1,42 @@
+---
+# ServiceAccount for Jenkins controller
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins
+  namespace: jenkins
+  labels:
+    app: jenkins
+
+---
+# ClusterRole - Jenkins needs to create/delete pods (agents) in jenkins namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: jenkins-agent-role
+  labels:
+    app: jenkins
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec", "pods/log", "persistentvolumeclaims", "events"]
+    verbs: ["get", "list", "watch", "create", "delete", "patch", "update"]
+  - apiGroups: [""]
+    resources: ["secrets", "configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+---
+# Bind the ClusterRole to jenkins ServiceAccount in jenkins namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jenkins-agent-rolebinding
+  labels:
+    app: jenkins
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: jenkins
+roleRef:
+  kind: ClusterRole
+  name: jenkins-agent-role
+  apiGroup: rbac.authorization.k8s.io
