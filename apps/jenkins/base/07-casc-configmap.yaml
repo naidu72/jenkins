@@ -85,11 +85,9 @@ data:
                           key: "DOCKER_TLS_CERTDIR"
                           value: ""
 
-    security:
+    unclassified:
       globalJobDslSecurityConfiguration:
         useScriptSecurity: false
-
-    unclassified:
       location:
         url: "https://jenkins.naidu72.info/jenkins/"
         adminAddress: "admin@naidu72.info"
