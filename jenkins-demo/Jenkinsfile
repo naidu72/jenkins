@@ -1,7 +1,6 @@
 pipeline {
     agent {
         kubernetes {
-            label 'k3s-agent'
             yaml """
 apiVersion: v1
 kind: Pod
@@ -109,7 +108,7 @@ spec:
     post {
         always {
             echo "=== Pipeline complete. Build #${BUILD_NUMBER} ==="
-            cleanWs()
+            deleteDir()
         }
         success {
             echo "✅ SUCCESS"
