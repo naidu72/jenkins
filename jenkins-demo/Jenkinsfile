@@ -1,0 +1,121 @@
+pipeline {
+    agent {
+        kubernetes {
+            label 'k3s-agent'
+            yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: jenkins-agent
+spec:
+  containers:
+  - name: jnlp
+    image: jenkins/inbound-agent:latest-jdk17
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+  - name: tools
+    image: alpine:3.19
+    command: ['sleep', 'infinity']
+    tty: true
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+"""
+        }
+    }
+
+    environment {
+        APP_NAME = 'jenkins-demo'
+    }
+
+    options {
+        timestamps()
+        timeout(time: 10, unit: 'MINUTES')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh 'ls -la'
+            }
+        }
+
+        stage('Environment Info') {
+            steps {
+                container('tools') {
+                    sh '''
+                        echo "==============================="
+                        echo "  Build Info"
+                        echo "==============================="
+                        echo "Job Name    : ${JOB_NAME}"
+                        echo "Build Number: ${BUILD_NUMBER}"
+                        echo "Branch      : ${BRANCH_NAME:-main}"
+                        echo "Workspace   : ${WORKSPACE}"
+                        echo "Agent Node  : $(hostname)"
+                        echo "OS          : $(uname -a)"
+                        echo "==============================="
+                    '''
+                }
+            }
+        }
+
+        stage('Parallel Tasks') {
+            parallel {
+                stage('Task A') {
+                    steps {
+                        container('tools') {
+                            sh '''
+                                echo "Task A running..."
+                                sleep 3
+                                echo "Task A done ✅"
+                            '''
+                        }
+                    }
+                }
+                stage('Task B') {
+                    steps {
+                        container('tools') {
+                            sh '''
+                                echo "Task B running..."
+                                sleep 2
+                                echo "Task B done ✅"
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Simulate Test') {
+            steps {
+                container('tools') {
+                    sh '''
+                        echo "Running tests..."
+                        echo "test_login: PASS"
+                        echo "test_signup: PASS"
+                        echo "test_api: PASS"
+                        echo "All tests passed ✅"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "=== Pipeline complete. Build #${BUILD_NUMBER} ==="
+            cleanWs()
+        }
+        success {
+            echo "✅ SUCCESS"
+        }
+        failure {
+            echo "❌ FAILED"
+        }
+    }
+}
